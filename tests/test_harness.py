@@ -28,7 +28,7 @@ def _dt(dia: int, hora: int, minuto: int = 0) -> datetime:
 
 
 def _tarefa(**campos: object) -> Tarefa:
-    """Cria uma tarefa concluída e válida, sobrescrevendo os campos informados."""
+    """Cria uma tarefa concluída e válida, com os campos sobrescritos."""
     padrao: dict[str, object] = {
         "id_tarefa": 1,
         "titulo": "Tarefa de teste",
@@ -157,7 +157,9 @@ def test_cb02_apenas_pendentes_retorna_metricas_zeradas() -> None:
     assert relatorio.total_pendentes == 2
     assert relatorio.tempo_medio_conclusao_horas == 0.0
     assert relatorio.taxa_atraso_percentual == 0.0
-    assert set(relatorio.indicadores_por_prioridade) == {"baixa", "media", "alta"}
+    assert set(relatorio.indicadores_por_prioridade) == {
+        "baixa", "media", "alta",
+    }
     assert all(
         indicador == ZERADO
         for indicador in relatorio.indicadores_por_prioridade.values()

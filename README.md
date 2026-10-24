@@ -12,7 +12,9 @@ sdd-task-analyzer/
 ├── pytest.ini                 # Configuração do pytest e da cobertura mínima (90%)
 ├── .gitignore
 ├── specs/
-│   └── task_analyzer_spec.md  # Contrato SDD (v1.2), fonte da verdade
+│   ├── task_analyzer_spec.md  # Contrato SDD (v1.2), fonte da verdade
+│   ├── requirements.yaml      # Rastreabilidade: requisito, regra e cenário → teste
+│   └── system_design_document.pdf  # A spec em PDF, gerada a partir do .md
 ├── tests/
 │   └── test_harness.py        # Test Harness (pytest)
 └── src/

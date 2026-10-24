@@ -1,0 +1,9 @@
+# Lista de permissão: só o necessário para rodar a suíte entra no build.
+# Assim .git, .venv, .env, caches e documentação ficam de fora (DI-04, PR-07).
+*
+!requirements.txt
+!pytest.ini
+!src/
+!tests/
+**/__pycache__
+**/*.py[cod]

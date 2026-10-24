@@ -11,6 +11,9 @@ sdd-task-analyzer/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml             # Pipeline de CI (GitHub Actions)
+├── Dockerfile                 # Imagem python:3.11-slim que roda o Test Harness
+├── docker-compose.yml         # Serviço "tests": a suíte em um único comando
+├── .dockerignore              # Só src/, tests/, pytest.ini e requirements.txt entram na imagem
 ├── README.md                  # Este arquivo
 ├── CONTEXT_RULES.md           # Regras de governança para a IA
 ├── requirements.txt           # Dependências autorizadas (pytest, pytest-cov)
@@ -38,6 +41,21 @@ pytest
 ```
 
 O `pytest.ini` já ativa o relatório de cobertura e falha a execução se ela ficar abaixo de 90%.
+
+## Execução com Docker
+
+Não exige Python instalado, só o Docker. A imagem usa `python:3.11-slim`, roda como usuário não-root e executa `pytest tests/test_harness.py -v`.
+
+```bash
+docker build -t sdd-task-analyzer:1.2 .
+docker run --rm sdd-task-analyzer:1.2
+```
+
+Ou, com o Docker Compose, em um único comando (`--build` garante a imagem atualizada):
+
+```bash
+docker compose run --rm --build tests
+```
 
 ## Integração contínua
 

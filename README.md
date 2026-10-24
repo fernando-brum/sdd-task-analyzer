@@ -12,7 +12,7 @@ sdd-task-analyzer/
 ├── pytest.ini                 # Configuração do pytest e da cobertura mínima (90%)
 ├── .gitignore
 ├── specs/
-│   └── task_analyzer_spec.md  # Contrato SDD (v1.1), fonte da verdade
+│   └── task_analyzer_spec.md  # Contrato SDD (v1.2), fonte da verdade
 ├── tests/
 │   └── test_harness.py        # Test Harness (pytest)
 └── src/
@@ -55,6 +55,7 @@ relatorio.tempo_medio_conclusao_horas  # 2.0
 
 ## Fluxo de trabalho
 
-- `main`: versão homologada.
-- `feature/*`: uma branch por entrega (`feature/sdd-specification`, `feature/test-harness`, `feature/task-analyzer-impl`).
-- Todo merge na `main` passa por Pull Request com os critérios da seção 5 da [spec](specs/task_analyzer_spec.md): testes verdes, cobertura ≥ 90%, aderência às [CONTEXT_RULES](CONTEXT_RULES.md) e registro do que a IA gerou e do que foi corrigido pelo humano.
+- `feature/*`: uma branch por entrega, criada a partir da `develop`.
+- `develop`: integração das features, por Pull Request.
+- `main`: versão homologada; recebe apenas Pull Requests vindos da `develop`.
+- Todo merge passa por Pull Request com os critérios da seção 5.4 da [spec](specs/task_analyzer_spec.md): testes verdes, check verde do GitHub Actions, cobertura ≥ 90%, aderência às [CONTEXT_RULES](CONTEXT_RULES.md) e registro do que a IA gerou e do que foi corrigido pelo humano.

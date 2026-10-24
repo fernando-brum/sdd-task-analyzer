@@ -1,6 +1,6 @@
 # CONTEXT_RULES — Regras de governança para agentes de IA
 
-Este arquivo é entregue ao assistente de IA **antes** de qualquer geração de código, junto com [`specs/task_analyzer_spec.md`](specs/task_analyzer_spec.md) (v1.1). Se as regras e a spec conflitarem, a spec vence e o conflito deve ser apontado ao humano.
+Este arquivo é entregue ao assistente de IA **antes** de qualquer geração de código, junto com [`specs/task_analyzer_spec.md`](specs/task_analyzer_spec.md) (v1.2). Se as regras e a spec conflitarem, a spec vence e o conflito deve ser apontado ao humano.
 
 ## 1. Diretrizes arquiteturais (o que FAZER)
 
@@ -22,7 +22,20 @@ Este arquivo é entregue ao assistente de IA **antes** de qualquer geração de 
 - **PR-05:** Proibido entregar código parcial ou sem a cobertura de testes exigida (≥ 90%).
 - **PR-06:** Proibido alterar a especificação ou os testes para fazer o código passar. Se um teste parecer errado, pergunte ao humano.
 
-## 3. Protocolo de interação
+## 3. Infraestrutura e DevOps (Fase 3)
+
+O pipeline e o container fazem parte do contrato (seções 5.2 e 5.3 da spec). As regras abaixo valem para `.github/workflows/`, `Dockerfile`, `docker-compose.yml` e `.dockerignore`.
+
+- **DI-01:** A imagem base é fixa: `python:3.11-slim`. Proibido `latest` ou outra imagem.
+- **DI-02:** Nas Actions, só as ações oficiais `actions/checkout` e `actions/setup-python`, cada uma com versão major fixada.
+- **DI-03:** O CI e o container executam a mesma suíte e o mesmo `pytest.ini` do ambiente local.
+- **DI-04:** O container roda como usuário não-root e não carrega `.venv`, `.git` nem caches (`.dockerignore`).
+- **DI-05:** As dependências Python vêm só do `requirements.txt`, também no CI e na imagem. GitHub Actions e Docker são infraestrutura, não bibliotecas do código (PR-01 continua valendo).
+- **PR-07:** Proibido colocar segredo, token ou credencial no repositório, no workflow ou na imagem.
+- **PR-08:** Proibido pular, filtrar ou marcar testes como `skip`/`xfail` no CI ou no container, ou baixar o `--cov-fail-under`.
+- **PR-09:** Proibido merge na `main` sem o check verde do GitHub Actions.
+
+## 4. Protocolo de interação
 
 1. O agente recebe este arquivo e a spec antes de gerar código.
 2. Diante de lacuna ou ambiguidade, o agente **pergunta**. Nunca inventa comportamento.

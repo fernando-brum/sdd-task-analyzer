@@ -1,11 +1,16 @@
 # sdd-task-analyzer
 
+[![CI](https://github.com/fernando-brum/sdd-task-analyzer/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fernando-brum/sdd-task-analyzer/actions/workflows/ci.yml)
+
 Motor de análise de produtividade (**TaskAnalyzer**) desenvolvido com *Spec-Driven Development* (SDD): o código é gerado por um assistente de IA a partir de uma especificação contratual e de regras de contexto, e depois homologado por um humano.
 
 ## Estrutura
 
 ```text
 sdd-task-analyzer/
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # Pipeline de CI (GitHub Actions)
 ├── README.md                  # Este arquivo
 ├── CONTEXT_RULES.md           # Regras de governança para a IA
 ├── requirements.txt           # Dependências autorizadas (pytest, pytest-cov)
@@ -33,6 +38,10 @@ pytest
 ```
 
 O `pytest.ini` já ativa o relatório de cobertura e falha a execução se ela ficar abaixo de 90%.
+
+## Integração contínua
+
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a cada push e Pull Request nas branches `main` e `develop`: em `ubuntu-latest` com Python 3.11, instala o `requirements.txt` e executa `pytest tests/test_harness.py -v`. O resultado aparece na aba [Actions](https://github.com/fernando-brum/sdd-task-analyzer/actions) e no badge acima.
 
 ## Exemplo de uso
 

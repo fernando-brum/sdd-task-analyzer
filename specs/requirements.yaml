@@ -1,0 +1,205 @@
+# Rastreabilidade do TaskAnalyzer: requisito, regra e cenário -> teste.
+# Fonte da verdade: specs/task_analyzer_spec.md (v1.2).
+# Documentação apenas: nenhum código lê este arquivo (PR-01 proíbe PyYAML).
+# Os testes ficam em tests/test_harness.py; parametrizados aparecem como
+# nome[id], exatamente como o pytest os coleta.
+
+versao_spec: "1.2"
+fonte: specs/task_analyzer_spec.md
+suite: tests/test_harness.py
+cobertura_minima_percentual: 90
+
+requisitos:
+  - id: REQ-01
+    tipo: funcional
+    descricao: Analisar listas de tarefas e produzir métricas consolidadas.
+    testes:
+      - "test_cenario_1_totais"
+  - id: REQ-02
+    tipo: funcional
+    descricao: Calcular o tempo médio de conclusão, em horas, das tarefas concluídas.
+    testes:
+      - "test_cenario_1_metricas_gerais"
+      - "test_media_e_arredondada_para_duas_casas"
+  - id: REQ-03
+    tipo: funcional
+    descricao: Calcular a taxa de tarefas concluídas após o prazo.
+    testes:
+      - "test_cenario_1_metricas_gerais"
+      - "test_cb03_conclusao_no_instante_do_prazo_nao_e_atraso"
+      - "test_conclusao_um_segundo_apos_o_prazo_e_atraso"
+  - id: REQ-04
+    tipo: funcional
+    descricao: Segmentar quantidade, tempo médio e taxa de atraso por prioridade.
+    testes:
+      - "test_cenario_1_indicadores_por_prioridade"
+  - id: REQ-05
+    tipo: nao_funcional
+    descricao: Operar exclusivamente em memória, sem efeitos colaterais.
+    testes:
+      - "test_cb11_analise_nao_modifica_a_entrada"
+      - "test_dataclasses_sao_imutaveis"
+  - id: REQ-06
+    tipo: nao_funcional
+    descricao: Determinismo, a mesma entrada gera exatamente a mesma saída.
+    testes:
+      - "test_resultado_e_deterministico"
+      - "test_cb10_ordem_da_entrada_nao_altera_resultado"
+
+regras_de_negocio:
+  - id: RN-01
+    descricao: Só tarefas concluídas entram no cálculo de tempo e atraso.
+    testes:
+      - "test_cenario_1_totais"
+      - "test_cb02_apenas_pendentes_retorna_metricas_zeradas"
+  - id: RN-02
+    descricao: Tempo de conclusão = data_conclusao - data_inicio, em horas.
+    testes:
+      - "test_cenario_1_metricas_gerais"
+  - id: RN-03
+    descricao: Atraso somente se data_conclusao > prazo.
+    testes:
+      - "test_cb03_conclusao_no_instante_do_prazo_nao_e_atraso"
+      - "test_conclusao_um_segundo_apos_o_prazo_e_atraso"
+  - id: RN-04
+    descricao: Tempo médio = média aritmética simples.
+    testes:
+      - "test_cenario_1_metricas_gerais"
+  - id: RN-05
+    descricao: Taxa de atraso = atrasadas / concluídas * 100.
+    testes:
+      - "test_cenario_1_metricas_gerais"
+  - id: RN-06
+    descricao: Todo float da saída é arredondado para 2 casas, só no final.
+    testes:
+      - "test_media_e_arredondada_para_duas_casas"
+      - "test_cenario_1_metricas_gerais"
+  - id: RN-07
+    descricao: Indicadores por prioridade aplicam RN-02 a RN-06 ao subconjunto.
+    testes:
+      - "test_cenario_1_indicadores_por_prioridade"
+  - id: RN-08
+    descricao: Sem tarefas concluídas, médias e taxas valem 0.0, sem divisão por zero.
+    testes:
+      - "test_cb01_lista_vazia_retorna_metricas_zeradas"
+      - "test_cb02_apenas_pendentes_retorna_metricas_zeradas"
+      - "test_cenario_1_indicadores_por_prioridade"
+  - id: RN-09
+    descricao: O dicionário de prioridades sempre tem as chaves baixa, media e alta.
+    testes:
+      - "test_cb01_lista_vazia_retorna_metricas_zeradas"
+      - "test_cb02_apenas_pendentes_retorna_metricas_zeradas"
+  - id: RN-10
+    descricao: Validação fail-fast, uma tarefa inválida aborta a análise.
+    testes:
+      - "test_erro_expoe_id_da_tarefa_invalida"
+      - "test_tarefa_invalida_dispara_erro"
+  - id: RN-11
+    descricao: A ordem da entrada não altera o resultado.
+    testes:
+      - "test_cb10_ordem_da_entrada_nao_altera_resultado"
+  - id: RN-12
+    descricao: Execução pura, a lista de entrada não é alterada.
+    testes:
+      - "test_cb11_analise_nao_modifica_a_entrada"
+  - id: RN-13
+    descricao: Datas opcionais de pendentes e canceladas seguem as regras de UTC e cronologia.
+    testes:
+      - "test_rn13_pendente_com_data_inicio_valida_e_aceita"
+      - "test_rn13_pendente_com_data_naive_dispara_erro"
+
+cenarios:
+  - id: Cenario-1
+    descricao: Sucesso, cálculo geral e segmentado com 5 tarefas.
+    testes:
+      - "test_cenario_1_totais"
+      - "test_cenario_1_metricas_gerais"
+      - "test_cenario_1_indicadores_por_prioridade"
+  - id: Cenario-2
+    descricao: Erro, data_conclusao anterior a data_criacao dispara TaskValidationError.
+    testes:
+      - "test_cenario_2_conclusao_anterior_a_criacao_dispara_erro"
+  - id: CB-01
+    descricao: Lista vazia retorna métricas 0.0 sem exceção.
+    testes:
+      - "test_cb01_lista_vazia_retorna_metricas_zeradas"
+  - id: CB-02
+    descricao: Apenas pendentes retorna métricas 0.0 sem exceção.
+    testes:
+      - "test_cb02_apenas_pendentes_retorna_metricas_zeradas"
+  - id: CB-03
+    descricao: Conclusão no instante exato do prazo não é atraso.
+    testes:
+      - "test_cb03_conclusao_no_instante_do_prazo_nao_e_atraso"
+  - id: CB-04
+    descricao: Conclusão anterior ao início dispara TaskValidationError.
+    testes:
+      - "test_tarefa_invalida_dispara_erro[cb04-conclusao-antes-do-inicio]"
+  - id: CB-05
+    descricao: Prioridade ou status fora do domínio dispara TaskValidationError.
+    testes:
+      - "test_tarefa_invalida_dispara_erro[cb05-prioridade-urgente]"
+      - "test_tarefa_invalida_dispara_erro[cb05-prioridade-com-acento]"
+      - "test_tarefa_invalida_dispara_erro[cb05-prioridade-maiuscula]"
+      - "test_tarefa_invalida_dispara_erro[cb05-status-invalido]"
+  - id: CB-06
+    descricao: Ids duplicados disparam TaskValidationError.
+    testes:
+      - "test_cb06_ids_duplicados_disparam_erro"
+  - id: CB-07
+    descricao: Data naive ou fora de UTC dispara TaskValidationError.
+    testes:
+      - "test_tarefa_invalida_dispara_erro[cb07-criacao-naive]"
+      - "test_tarefa_invalida_dispara_erro[cb07-prazo-naive]"
+      - "test_tarefa_invalida_dispara_erro[cb07-inicio-fora-de-utc]"
+  - id: CB-08
+    descricao: Tarefa concluída sem data_inicio ou data_conclusao dispara erro.
+    testes:
+      - "test_tarefa_invalida_dispara_erro[cb08-concluida-sem-inicio]"
+      - "test_tarefa_invalida_dispara_erro[cb08-concluida-sem-conclusao]"
+  - id: CB-09
+    descricao: Título vazio, só espaços ou com mais de 200 caracteres dispara erro.
+    testes:
+      - "test_tarefa_invalida_dispara_erro[cb09-titulo-vazio]"
+      - "test_tarefa_invalida_dispara_erro[cb09-titulo-espacos]"
+      - "test_tarefa_invalida_dispara_erro[cb09-titulo-201-caracteres]"
+      - "test_titulo_com_200_caracteres_e_valido"
+  - id: CB-10
+    descricao: A mesma lista em outra ordem gera relatório idêntico.
+    testes:
+      - "test_cb10_ordem_da_entrada_nao_altera_resultado"
+  - id: CB-11
+    descricao: A lista de entrada fica igual a uma deepcopy feita antes.
+    testes:
+      - "test_cb11_analise_nao_modifica_a_entrada"
+
+contrato_de_entrada_e_excecoes:
+  - id: Spec-2.1
+    descricao: Tipos e restrições de id_tarefa, titulo, datas e cronologia.
+    testes:
+      - "test_tarefa_invalida_dispara_erro[inicio-antes-da-criacao]"
+      - "test_tarefa_invalida_dispara_erro[id-zero]"
+      - "test_tarefa_invalida_dispara_erro[id-negativo]"
+      - "test_tarefa_invalida_dispara_erro[id-bool]"
+      - "test_tarefa_invalida_dispara_erro[id-str]"
+      - "test_tarefa_invalida_dispara_erro[prazo-str]"
+      - "test_tarefa_invalida_dispara_erro[titulo-none]"
+      - "test_elemento_que_nao_e_tarefa_dispara_erro"
+  - id: Spec-2.5
+    descricao: TaskValidationError herda de TaskAnalyzerError e expõe id_tarefa e motivo.
+    testes:
+      - "test_task_validation_error_herda_de_task_analyzer_error"
+      - "test_erro_expoe_id_da_tarefa_invalida"
+
+infraestrutura:
+  - id: Spec-5.2
+    descricao: CI no GitHub Actions em push e PR para main e develop, Python 3.11.
+    arquivo: .github/workflows/ci.yml
+    verificacao: Check verde do GitHub Actions em cada Pull Request.
+  - id: Spec-5.3
+    descricao: Suíte executada em container python:3.11-slim, não-root.
+    arquivos:
+      - Dockerfile
+      - docker-compose.yml
+      - .dockerignore
+    verificacao: docker compose run --rm tests com todos os testes aprovados.

@@ -1,0 +1,7 @@
+# Orquestração da suíte de testes em container.
+# Uso: docker compose run --rm tests
+
+services:
+  tests:
+    build: .
+    image: sdd-task-analyzer:1.2

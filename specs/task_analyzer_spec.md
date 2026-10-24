@@ -1,6 +1,6 @@
 # Especificação SDD — TaskAnalyzer
 
-**Versão:** 1.1 (alinhada à Fase 2) · **Versão anterior:** 1.0 (Fase 1, 12/09/2026)
+**Versão:** 1.2 (Fase 3: CI/CD, Docker e governança) · **Versões anteriores:** 1.1 (Fase 2), 1.0 (Fase 1)
 
 > Esta especificação é a **fonte da verdade** para a geração de código. O que não está neste contrato não deve ser implementado.
 
@@ -12,6 +12,17 @@
 |---|---|---|
 | 1.0 | 12/09/2026 | Especificação consolidada da Fase 1. |
 | 1.1 | 17/10/2026 | Contrato alinhado ao enunciado da Fase 2 (ver tabela abaixo). A spec foi revisada **antes** de qualquer geração de código. |
+| 1.2 | 24/10/2026 | Fase 3: fluxo com `develop`, pipeline de CI, execução em container e artefatos de rastreabilidade. O contrato do módulo (seções 1 a 4) não muda. |
+
+**Mudanças da v1.1 para a v1.2:**
+
+| Item | v1.1 | v1.2 | Motivo |
+|---|---|---|---|
+| Fluxo Git | `main` + `feature/*` | `feature/*` → `develop` → `main` | O enunciado da Fase 3 dispara o CI em `main` e `develop`. |
+| Integração contínua | Testes só locais | GitHub Actions a cada push e PR (seção 5.2) | Pilar 1 da Fase 3. |
+| Execução isolada | `.venv` local | `Dockerfile` + `docker-compose.yml` (seção 5.3) | Pilar 2 da Fase 3. |
+| Artefatos de spec | Só este `.md` | Mais `requirements.yaml` e `system_design_document.pdf` (seção 5.5) | Árvore de diretórios exigida pela Fase 3. |
+| Critério de PR | Testes locais verdes | Também o check verde do GitHub Actions | Homologação passa a ter prova automatizada e pública. |
 
 **Mudanças da v1.0 para a v1.1:**
 
@@ -207,15 +218,49 @@ Os testes ficam em `tests/test_harness.py` e são escritos **antes** da implemen
 
 ---
 
-## 5. Repositório e homologação
+## 5. Repositório, infraestrutura e homologação
 
-Estrutura e fluxo de trabalho estão em [`README.md`](../README.md) e as regras para a IA, em [`CONTEXT_RULES.md`](../CONTEXT_RULES.md).
+A estrutura do repositório está em [`README.md`](../README.md) e as regras para a IA, em [`CONTEXT_RULES.md`](../CONTEXT_RULES.md).
 
-**Critérios de aceite de Pull Request:**
+### 5.1 Fluxo Git
 
-1. Test Harness 100% verde.
-2. Cobertura de pelo menos 90%.
-3. O revisor humano confirma que nenhuma regra das CONTEXT_RULES foi violada.
-4. O PR descreve *o que foi gerado pela IA* e *o que precisou de intervenção humana*.
+- `feature/*`: uma branch por entrega, sempre criada a partir da `develop`.
+- `develop`: integração. Recebe as features por Pull Request.
+- `main`: versão homologada. Recebe apenas Pull Requests vindos da `develop`.
+
+### 5.2 Integração contínua (GitHub Actions)
+
+O arquivo `.github/workflows/ci.yml` é o contrato do pipeline:
+
+| Etapa | Definição |
+|---|---|
+| Gatilhos | `push` e `pull_request` nas branches `main` e `develop` |
+| Ambiente | `ubuntu-latest` com Python 3.11 |
+| Preparação | `pip install -r requirements.txt` |
+| Execução | `pytest tests/test_harness.py -v` |
+
+O pipeline usa o mesmo `pytest.ini` do ambiente local. Por isso, ele também falha se a cobertura ficar abaixo de 90%.
+
+### 5.3 Execução isolada (Docker)
+
+- `Dockerfile`: imagem base `python:3.11-slim`. Instala o `requirements.txt`, copia `src/`, `tests/` e `pytest.ini`, roda como usuário não-root e tem `CMD ["pytest", "tests/test_harness.py", "-v"]`.
+- `docker-compose.yml`: define o serviço `tests`. A suíte inteira roda com um único comando: `docker compose run --rm tests`.
+- O resultado no container deve ser idêntico ao local: todos os testes aprovados e cobertura de pelo menos 90%.
+
+### 5.4 Critérios de aceite de Pull Request
+
+1. Test Harness 100% verde no ambiente local.
+2. Check verde do GitHub Actions no PR.
+3. Cobertura de pelo menos 90%.
+4. O revisor humano confirma que nenhuma regra das CONTEXT_RULES foi violada.
+5. O PR descreve *o que foi gerado pela IA* e *o que precisou de intervenção humana*.
+
+### 5.5 Artefatos de especificação
+
+| Arquivo | Papel |
+|---|---|
+| `specs/task_analyzer_spec.md` | Fonte da verdade, editada por PR. |
+| `specs/requirements.yaml` | Rastreabilidade: cada requisito, regra e cenário ligado ao teste que o cobre. É documentação; nenhum código o lê, pois isso exigiria uma biblioteca de terceiros (PR-01). |
+| `specs/system_design_document.pdf` | Este documento em PDF, gerado a partir do `.md`. Deve ser gerado de novo sempre que o `.md` mudar. |
 
 *Código que só passa nos testes não está homologado. Homologar exige que o arquiteto humano entenda cada linha produzida pela IA e se responsabilize por ela.*
